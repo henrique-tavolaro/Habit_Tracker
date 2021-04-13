@@ -4,12 +4,12 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewModelScope
-import com.example.hilt.db.User
+import com.example.hilt.db.CalDate
+import com.example.hilt.db.DatesHabitsCrossRef
+import com.example.hilt.db.DatesWithHabits
+import com.example.hilt.db.Habit
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.scopes.ViewModelScoped
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,23 +18,83 @@ class UserViewModel @Inject constructor(
     private val repository: MainRepository
 ) : ViewModel() {
 
-    fun insertUser(user: User) {
+    val switchState = mutableStateOf(false)
+
+    fun onSwitchStateChanged(){
+        switchState.value = !switchState.value
+    }
+
+    val selectedCategory: MutableState<String?> = mutableStateOf(null)
+
+    val isDark = mutableStateOf(false)
+
+    fun toggleLightTheme() {
+        isDark.value = !isDark.value
+    }
+    fun onSelectedCategoryChanged(date: String){
+        selectedCategory.value = date
+        getDatesWithHabits(date)
+    }
+
+    val calDateList: MutableState<List<CalDate>> = mutableStateOf(listOf())
+
+    val habitList: MutableState<List<Habit>> = mutableStateOf(listOf())
+
+    val habitTextInput = mutableStateOf("")
+
+    fun onHabitTextInputChange(text: String) {
+        habitTextInput.value = text
+    }
+
+    init {
+        getAllHabits()
+        getAllDates()
+    }
+
+    val datesWithHabits : MutableState<List<DatesWithHabits>> = mutableStateOf(listOf())
+
+    fun getDatesWithHabits(date: String){
         viewModelScope.launch {
-            repository.insertUser(user)
+            datesWithHabits.value = repository.getDatesWithHabits(date)
+
         }
     }
 
 
-    val userList: MutableState<List<User>> = mutableStateOf(listOf())
 
-    init {
+    fun insertHabitWithDate(crossRef: DatesHabitsCrossRef){
+        viewModelScope.launch {
+            repository.insertHabitWithDate(crossRef)
+        }
+    }
+
+    fun deleteHabitWithDate(crossRef: DatesHabitsCrossRef){
+        viewModelScope.launch {
+            repository.deleteHabitWithDate(crossRef)
+        }
+    }
+
+    fun getAllHabits(){
+        viewModelScope.launch {
+            habitList.value = repository.getAllHabits()
+        }
+    }
+
+    fun getAllDates(){
         viewModelScope.launch() {
-            try {
-                val result: List<User> = repository.getAllUsers()
-                userList.value = result
-            } catch (e: Exception) {
-                Log.e("SSS", "${e.message.toString()}; ${e.stackTrace}")
-            }
+                calDateList.value = repository.getAllDates()
+        }
+    }
+
+    fun insertHabit(habit: Habit) {
+        viewModelScope.launch {
+            repository.insertHabit(habit)
+        }
+    }
+
+    fun insertDate(calDate: CalDate) {
+        viewModelScope.launch {
+            repository.insertDate(calDate)
         }
     }
 
