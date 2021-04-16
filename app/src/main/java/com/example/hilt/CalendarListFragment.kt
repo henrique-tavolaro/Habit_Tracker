@@ -1,6 +1,7 @@
 package com.example.hilt
 
 import android.annotation.SuppressLint
+import android.icu.util.TimeUnit.values
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -9,24 +10,24 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,8 +38,13 @@ import com.example.hilt.db.DatesWithHabits
 import com.example.hilt.db.Habit
 import com.example.hilt.ui.theme.HiltTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.YearMonth
+import java.time.chrono.JapaneseEra.values
 import java.util.*
 import javax.inject.Inject
 
@@ -59,65 +65,65 @@ class CalendarListFragment : Fragment() {
                 HiltTheme(
                     darkTheme = isDark
                 ) {
-                val datesWithHabits = viewModel.datesWithHabits.value
-                val dateList = viewModel.calDateList.value
-                val sdf = SimpleDateFormat("d MMM yy")
-                val week = SimpleDateFormat("EEE")
-                val currDate = Calendar.getInstance()
+                    val datesWithHabits = viewModel.datesWithHabits.value
+                    val dateList = viewModel.calDateList.value
+                    val sdf = SimpleDateFormat("d MMM yy")
+                    val week = SimpleDateFormat("EEE")
+                    val currDate = Calendar.getInstance()
 
-                currDate.get(Calendar.DATE)
-                val newCurrDate = sdf.format(currDate.time).toString()
-                val selectedCategory = viewModel.selectedCategory.value
+                    currDate.get(Calendar.DATE)
+                    val newCurrDate = sdf.format(currDate.time).toString()
+                    val selectedCategory = viewModel.selectedCategory.value
 
-                val previous = Calendar.getInstance()
-                val amount = -1
-                val plus = 1
-                previous.add(Calendar.DATE, amount)
+                    val previous = Calendar.getInstance()
+                    val amount = -1
+                    val plus = 1
+                    previous.add(Calendar.DATE, amount)
 
-                val habitList = viewModel.habitList.value
-                val habitTextField = viewModel.habitTextInput
-                val isDialogOpen = remember { mutableStateOf(false) }
+                    val habitList = viewModel.habitList.value
+                    val habitTextField = viewModel.habitTextInput
+                    val isDialogOpen = remember { mutableStateOf(false) }
 
-                val dateSelected = remember { mutableStateOf(newCurrDate) }
+                    val dateSelected = remember { mutableStateOf(newCurrDate) }
 
-                if (dateList.isNotEmpty()) {
-                    val date = dateList[dateList.size - 1].date
-                    if (date != sdf.format(currDate.time)) {
-                        while (date.toString() !=
-                            sdf.format(previous.time)
-                        ) {
-                            Log.d("date", sdf.format(previous.time))
-                            dateList[dateList.size - 1].date?.let { Log.d("date2", it) }
-                            previous.add(Calendar.DATE, amount)
-                        }
-                        var previousTime = sdf.format(previous.time)
-                        val currTime = sdf.format(currDate.time).toString()
-                        while (sdf.format(previous.time).toString() != sdf.format(currDate.time)
-                                .toString()
-                        ) {
-                            Log.d("currDate", currTime)
-                            Log.d("date4", sdf.format(previous.time))
+                    if (dateList.isNotEmpty()) {
+                        val date = dateList[dateList.size - 1].date
+                        if (date != sdf.format(currDate.time)) {
+                            while (date.toString() !=
+                                sdf.format(previous.time)
+                            ) {
+                                Log.d("date", sdf.format(previous.time))
+                                dateList[dateList.size - 1].date?.let { Log.d("date2", it) }
+                                previous.add(Calendar.DATE, amount)
+                            }
+                            var previousTime = sdf.format(previous.time)
+                            val currTime = sdf.format(currDate.time).toString()
+                            while (sdf.format(previous.time).toString() != sdf.format(currDate.time)
+                                    .toString()
+                            ) {
+                                Log.d("currDate", currTime)
+                                Log.d("date4", sdf.format(previous.time))
 
-                            if (date != sdf.format(previous.time))
-                                viewModel.insertDate(
-                                    CalDate(
-                                        sdf.format(previous.time),
-                                        week.format(previous.time)
+                                if (date != sdf.format(previous.time))
+                                    viewModel.insertDate(
+                                        CalDate(
+                                            sdf.format(previous.time),
+                                            week.format(previous.time)
+                                        )
                                     )
-                                )
 
-                            previous.add(Calendar.DATE, plus).toString()
-                        }
-                        Log.d("date5", currDate.toString())
-                        viewModel.insertDate(
-                            CalDate(
-                                sdf.format(currDate.time).toString(),
-                                week.format(currDate.time).toString()
+                                previous.add(Calendar.DATE, plus).toString()
+                            }
+                            Log.d("date5", currDate.toString())
+                            viewModel.insertDate(
+                                CalDate(
+                                    sdf.format(currDate.time).toString(),
+                                    week.format(currDate.time).toString()
+                                )
                             )
-                        )
+                        }
+                        viewModel.getAllDates()
                     }
-                    viewModel.getAllDates()
-                }
 
                     Scaffold(
                         topBar = {
@@ -149,8 +155,11 @@ class CalendarListFragment : Fragment() {
                     ) {
 
                         Column(Modifier.padding(8.dp)) {
-                            LazyRow(modifier = Modifier.padding(horizontal = 8.dp),
-                            contentPadding = PaddingValues(start = 50.dp, end = 50.dp)) {
+                            LazyRow(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                contentPadding = PaddingValues(start = 50.dp, end = 50.dp)
+                            ) {
+
                                 items(items = dateList) { date ->
                                     DateCard(
                                         date = date,
@@ -161,13 +170,14 @@ class CalendarListFragment : Fragment() {
 //                                        },
                                         isSelected = selectedCategory == date.date,
                                         onSelectedDateChanged = {
-                                            viewModel.onSelectedCategoryChanged(it)
-                                            dateSelected.value = it
+                                            viewModel.onSelectedCategoryChanged(it.toString())
+                                            dateSelected.value = it.toString()
                                         },
                                         viewModel = viewModel,
                                         datesWithHabits = datesWithHabits
                                     )
                                 }
+
                             }
                             Divider(
                                 modifier = Modifier.padding(8.dp),
@@ -202,7 +212,6 @@ class CalendarListFragment : Fragment() {
         }
     }
 }
-
 
 
 @Composable
@@ -270,27 +279,124 @@ fun HabitCard(
     habit: Habit,
     viewModel: UserViewModel,
     calDate: String,
-    datesHabit: List<DatesWithHabits>
+    dateHabit: List<DatesWithHabits>
 ) {
-    Card(
-        modifier = Modifier
-            .width(300.dp)
-            .padding(4.dp),
-        elevation = 4.dp
+    Row(
+        modifier = Modifier.fillMaxWidth()
     ) {
-
-        Row(
+        Card(
             modifier = Modifier
-                .padding(8.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(4.dp)
+                .weight(1f),
+            elevation = 4.dp,
+            shape = CircleShape
         ) {
-            Text(
-                text = habit.habit,
-                style = MaterialTheme.typography.h5
-            )
-            HabitSwitch(viewModel, habit.habit, calDate, datesHabit)
+            IconButton(
+                onClick = {
+                    viewModel.deleteHabit(habit)
+                    viewModel.getAllHabits()
+                },
+            ) {
+                Icon(Icons.Filled.Delete, contentDescription = null)
+            }
         }
+
+        Card(
+            modifier = Modifier
+                .padding(4.dp)
+                .weight(3f),
+            elevation = 4.dp,
+            shape = CircleShape
+        ) {
+
+//            Row(
+//                modifier = Modifier
+//                    .padding(8.dp),
+//                horizontalArrangement = Arrangement.SpaceBetween
+//            ) {
+            Text(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+//                        .width(200.dp)
+                ,
+                text = habit.habit,
+                style = MaterialTheme.typography.h6
+            )
+//                HabitSwitch(viewModel, habit.habit, calDate, dateHabit)
+//            }
+        }
+        Card(
+            modifier = Modifier
+                .padding(4.dp)
+                .weight(1f),
+            elevation = 4.dp,
+            shape = CircleShape
+        ) {
+            if (dateHabit.isNotEmpty()) {
+                val test = dateHabit[0]
+                val test2 = test.habits.contains(Habit(habit.habit))
+                Log.d("test2a", test.toString())
+                Log.d("test2b", test2.toString())
+
+                var test3 = false
+                val state = remember { mutableStateOf(false) }
+                Log.d("test2c", state.value.toString())
+                if (test2) {
+                    test3 = true
+                }
+//                Text(text = test2.toString())
+                val color by animateColorAsState(
+                    if (test3) colorResource(id = R.color.checkGreen) else
+                        MaterialTheme.colors.surface.copy(0.1f)
+                )
+                IconToggleButton(
+                    modifier = Modifier
+                        .background(color),
+                    checked = test3,
+                    onCheckedChange = {
+                        if (it) {
+                            viewModel.insertHabitWithDate(DatesHabitsCrossRef(calDate, habit.habit))
+                            viewModel.getDatesWithHabits(calDate)
+
+                        } else {
+                            viewModel.deleteHabitWithDate(DatesHabitsCrossRef(calDate, habit.habit))
+                            viewModel.getDatesWithHabits(calDate)
+                        }
+                    }
+                ) {
+                    Crossfade(targetState = test3) {
+
+                        if (test3)
+                            Icon(
+                                Icons.Filled.Check,
+                                contentDescription = null,
+                                tint = Color.White,
+                            )
+                        else
+                            Icon(
+                                Icons.Filled.Clear,
+                                contentDescription = null,
+                                tint = Color.LightGray
+                            )
+                    }
+                }
+            }
+        }
+        Card(
+            modifier = Modifier
+                .padding(4.dp)
+                .weight(1f),
+            elevation = 4.dp,
+            shape = CircleShape
+        ) {
+
+            IconButton(
+                onClick = { /*TODO*/ },
+            ) {
+                Icon(Icons.Filled.DateRange, contentDescription = null)
+            }
+        }
+
     }
 }
 
@@ -302,24 +408,32 @@ fun HabitSwitch(
     dateHabit: List<DatesWithHabits>
 ) {
 
-    val state = remember { mutableStateOf(false) }
-//    val state = viewModel.switchState
+    if (dateHabit.isNotEmpty()) {
+        val test = dateHabit[0]
+        val test2 = test.habits.contains(Habit(habit))
+        Log.d("test2a", test.toString())
+        Log.d("test2b", test2.toString())
 
-    Switch(
-        checked = if (dateHabit.isNotEmpty()) {
-            val test = dateHabit[0]
-            test.habits.contains(Habit(habit))
-            !state.value
-        }  else state.value,
-        onCheckedChange = {
-            state.value = it
-            if (it) {
-                viewModel.insertHabitWithDate(DatesHabitsCrossRef(calDate, habit))
-            } else {
-                viewModel.deleteHabitWithDate(DatesHabitsCrossRef(calDate, habit))
-            }
-        },
-    )
+
+        var test3 = false
+        if (test2) {
+            test3 = true
+        }
+        Text(text = test2.toString())
+        Switch(
+            checked = test3,
+            onCheckedChange = {
+                if (it) {
+                    viewModel.insertHabitWithDate(DatesHabitsCrossRef(calDate, habit))
+                    viewModel.getDatesWithHabits(calDate)
+
+                } else {
+                    viewModel.deleteHabitWithDate(DatesHabitsCrossRef(calDate, habit))
+                    viewModel.getDatesWithHabits(calDate)
+                }
+            },
+        )
+    }
 }
 
 @SuppressLint("SimpleDateFormat")
@@ -346,11 +460,13 @@ fun DateCard(
                 ),
             shape = RoundedCornerShape(6.dp),
             elevation = 8.dp,
-            backgroundColor = if (isSelected) Color.LightGray else MaterialTheme.colors.primary
-        ) {if(isSelected){
-            viewModel.getDatesWithHabits(date.date)
-            Log.d("card4", datesWithHabits.toString())
-        }
+            backgroundColor = if (isSelected) MaterialTheme.colors.onPrimary
+            else MaterialTheme.colors.primary
+        ) {
+            if (isSelected) {
+                viewModel.getDatesWithHabits(date.date)
+                Log.d("card4", datesWithHabits.toString())
+            }
             Column(modifier = Modifier.padding(4.dp)) {
 
                 Text(

@@ -16,6 +16,8 @@ class MainRepository @Inject constructor(
 
     suspend fun insertHabit(habit: Habit) = userDao.insertHabit(habit)
 
+    suspend fun deleteHabit(habit: Habit) = userDao.deleteHabit(habit)
+
     suspend fun getAllHabits() = userDao.getAllHabits()
 
     suspend fun getDatesWithHabits(date: String) = userDao.getDateWithHabits(date)

@@ -15,6 +15,9 @@ interface UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHabit(habit: Habit)
 
+    @Delete
+    suspend fun deleteHabit(habit: Habit)
+
     @Transaction
     @Query("SELECT * FROM habits")
     suspend fun getAllHabits(): List<Habit>
@@ -31,3 +34,4 @@ interface UserDao {
 
 
 }
+

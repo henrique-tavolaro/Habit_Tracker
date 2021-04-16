@@ -1,6 +1,7 @@
 package com.example.hilt
 
 import android.util.Log
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -18,11 +19,7 @@ class UserViewModel @Inject constructor(
     private val repository: MainRepository
 ) : ViewModel() {
 
-    val switchState = mutableStateOf(false)
 
-    fun onSwitchStateChanged(){
-        switchState.value = !switchState.value
-    }
 
     val selectedCategory: MutableState<String?> = mutableStateOf(null)
 
@@ -92,11 +89,16 @@ class UserViewModel @Inject constructor(
         }
     }
 
+    fun deleteHabit(habit: Habit){
+        viewModelScope.launch {
+            repository.deleteHabit(habit)
+        }
+    }
+
     fun insertDate(calDate: CalDate) {
         viewModelScope.launch {
             repository.insertDate(calDate)
         }
     }
-
 
 }
