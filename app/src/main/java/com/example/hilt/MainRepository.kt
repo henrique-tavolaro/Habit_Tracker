@@ -22,6 +22,8 @@ class MainRepository @Inject constructor(
 
     suspend fun getDatesWithHabits(date: String) = userDao.getDateWithHabits(date)
 
+    suspend fun getHabitsWithDates(habit: String) = userDao.getHabitsWithDates(habit)
+
     suspend fun insertHabitWithDate(crossRef: DatesHabitsCrossRef) =
         userDao.insertHabitWithDate(crossRef)
 

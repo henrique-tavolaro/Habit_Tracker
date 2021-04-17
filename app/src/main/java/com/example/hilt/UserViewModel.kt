@@ -6,10 +6,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.hilt.db.CalDate
-import com.example.hilt.db.DatesHabitsCrossRef
-import com.example.hilt.db.DatesWithHabits
-import com.example.hilt.db.Habit
+import com.example.hilt.db.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,6 +29,8 @@ class UserViewModel @Inject constructor(
         selectedCategory.value = date
         getDatesWithHabits(date)
     }
+
+
 
     val calDateList: MutableState<List<CalDate>> = mutableStateOf(listOf())
 
@@ -57,7 +56,13 @@ class UserViewModel @Inject constructor(
         }
     }
 
+    val habitsWithDates : MutableState<List<HabitsWithDates>> = mutableStateOf(listOf())
 
+    fun getHabitsWithDates(habit: String){
+        viewModelScope.launch {
+            habitsWithDates.value = repository.getHabitsWithDates(habit)
+        }
+    }
 
     fun insertHabitWithDate(crossRef: DatesHabitsCrossRef){
         viewModelScope.launch {

@@ -32,6 +32,8 @@ interface UserDao {
     @Delete
     suspend fun deleteHabitWithDate(crossRef: DatesHabitsCrossRef)
 
-
+    @Transaction
+    @Query("SELECT * FROM habits WHERE habit = :habit")
+    suspend fun getHabitsWithDates(habit: String): List<HabitsWithDates>
 }
 
