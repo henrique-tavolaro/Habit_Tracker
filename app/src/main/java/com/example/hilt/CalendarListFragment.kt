@@ -32,10 +32,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.viewModels
-import com.example.hilt.db.CalDate
-import com.example.hilt.db.DatesHabitsCrossRef
-import com.example.hilt.db.DatesWithHabits
-import com.example.hilt.db.Habit
+import com.example.hilt.db.*
 import com.example.hilt.ui.theme.HiltTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -83,32 +80,6 @@ class CalendarListFragment : Fragment() {
                     val historyToggle = remember { mutableStateOf(false) }
                     val radioOptions = listOf("Last 7 days", "Last 30 days")
                     val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[0]) }
-
-//                    val seven = Calendar.getInstance()
-//                    seven.add(Calendar.DATE, -7)
-//                    Log.d("seven1", seven.toString())
-//                    Log.d("seven1", sdf.format(seven.time).toString())
-//
-//                    val listSeven = mutableListOf<String>()
-//                    viewModel.getHabitsWithDates("sex")
-//                    val habitsWithHabits = viewModel.habitsWithDates.value
-//                    Log.d("seven3", habitsWithHabits.toString())
-//
-//                    if(habitsWithHabits.contains(sdf.format(seven.time))){
-//                        listSeven.add(sdf.format(seven.time))
-//                    }
-//
-//                    while(sdf.format(seven.time) != sdf.format(currDate.time)){
-//                        if(habitsWithHabits.isNotEmpty() &&
-//                            habitsWithHabits[0].dates.contains(CalDate(sdf.format(seven.time), "Thu"))){
-//                            listSeven.add(sdf.format(seven.time))
-//                        }
-//                        Log.d("seven2", sdf.format(seven.time))
-//                        seven.add(Calendar.DATE, plus)
-//                    }
-//
-//                    Log.d("seven", listSeven.size.toString())
-
 
                     if (dateList.isNotEmpty()) {
                         val date = dateList[dateList.size - 1].date
@@ -188,7 +159,11 @@ class CalendarListFragment : Fragment() {
                         Column(Modifier.padding(8.dp)) {
                             if (!historyToggle.value) {
                                 LazyRow(
-                                    modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp, ),
+                                    modifier = Modifier.padding(
+                                        start = 16.dp,
+                                        top = 8.dp,
+                                        end = 16.dp,
+                                    ),
                                     contentPadding = PaddingValues(start = 50.dp, end = 50.dp),
                                     state = listState
                                 ) {
@@ -297,57 +272,7 @@ fun SimpleRadioButtonComponent(
                     Modifier
                         .selectable(
                             selected = (text == selectedOption),
-                            onClick = {
-                                onOptionSelected(text)
-
-                                val seven = Calendar.getInstance()
-
-                                if (text == "Last 7 days") {
-                                    seven.add(Calendar.DATE, -7)
-                                } else {
-                                    seven.add(Calendar.DATE, -30)
-                                }
-                                Log.d("seven1", seven.toString())
-                                Log.d(
-                                    "seven1",
-                                    sdf
-                                        .format(seven.time)
-                                        .toString()
-                                )
-
-                                val listSeven = mutableListOf<String>()
-
-                                val habitsList: List<Habit> = viewModel.habitList.value
-                                viewModel.getAllHabits()
-                                for (habit in habitsList) {
-                                    viewModel.getHabitsWithDates(habit.habit)
-                                }
-
-
-                                val habitsWithHabits = viewModel.habitsWithDates.value
-                                Log.d("seven3", habitsWithHabits.toString())
-
-                                if (habitsWithHabits.contains(sdf.format(seven.time))) {
-                                    listSeven.add(sdf.format(seven.time))
-                                }
-                                val plus = 1
-                                while (sdf.format(seven.time) != sdf.format(currDate.time)) {
-                                    if (habitsWithHabits.isNotEmpty() &&
-                                        habitsWithHabits[0].dates.contains(
-                                            CalDate(
-                                                sdf.format(seven.time),
-                                                week.format(seven.time)
-                                            )
-                                        )
-                                    ) {
-                                        listSeven.add(sdf.format(seven.time))
-                                    }
-                                    Log.d("seven2", sdf.format(seven.time))
-                                    seven.add(Calendar.DATE, plus)
-                                }
-                                Log.d("seven", listSeven.size.toString())
-
-                            }
+                            onClick = {}
                         )
                         .padding(horizontal = 8.dp, vertical = 8.dp)
                 ) {
@@ -357,6 +282,11 @@ fun SimpleRadioButtonComponent(
                         modifier = Modifier.padding(all = Dp(value = 8F)),
                         onClick = {
                             onOptionSelected(text)
+//                            viewModel.habitsWithDatesListStats.value = mutableListOf()
+                            Log.d("Log10a", viewModel.habitsWithDatesListStats.value.toString())
+                            viewModel.habitStats(text, sdf, week, currDate)
+                            Log.d("Log10b", viewModel.habitsWithDatesListStats.value.toString())
+
                         }
                     )
                     Text(
@@ -404,7 +334,7 @@ fun HabitCard(
                 Icon(Icons.Filled.Delete, contentDescription = null)
             }
         }
-        var elevation = remember { mutableStateOf(1.dp) }
+        val elevation = remember { mutableStateOf(1.dp) }
 
         if (dateHabit.isNotEmpty()) {
 
@@ -417,93 +347,97 @@ fun HabitCard(
             }
 
             val color by animateColorAsState(
-                if(checked) MaterialTheme.colors.primaryVariant
+                if (checked) MaterialTheme.colors.primaryVariant
                 else MaterialTheme.colors.surface
             )
-            Card(
-                modifier = Modifier
-                    .padding(4.dp)
-                    .weight(if (historyToggle.value) 3f else 4f)
-                    .toggleable(
-                        value = checked,
-                        onValueChange = {
-                            if (it) {
-                                viewModel.insertHabitWithDate(
-                                    DatesHabitsCrossRef(
-                                        calDate,
-                                        habit.habit
-                                    )
-                                )
-                                viewModel.getDatesWithHabits(calDate)
 
-                            } else {
-                                viewModel.deleteHabitWithDate(
-                                    DatesHabitsCrossRef(
-                                        calDate,
-                                        habit.habit
-                                    )
-                                )
-                                viewModel.getDatesWithHabits(calDate)
-                            }
-                        }
-                    ),
-                backgroundColor = if(isDark) color else Color.White,
-                elevation = elevation.value,
-                shape = CircleShape,
+                if (historyToggle.value) {
 
-                ) {
+                    Card(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .weight(3.5f),
+                        backgroundColor = if (isDark) color else Color.White,
+                        elevation = 4.dp,
+                        shape = CircleShape,
 
-                Crossfade(targetState = checked) {
+                        ) {
 
-                    if (checked) {
-                        elevation.value = 4.dp
+
                         Text(
                             modifier = Modifier
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                             text = habit.habit,
-                            style = MaterialTheme.typography.h6
-                        )
-                    } else {
-                        elevation.value = 1.dp
-                        Text(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            text = habit.habit,
-                            color = Color.LightGray,
                             style = MaterialTheme.typography.h6
                         )
                     }
 
+                } else {
+
+                    Card(
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .weight(4f)
+                            .toggleable(
+                                value = checked,
+                                onValueChange = {
+                                    if (it) {
+                                        viewModel.insertHabitWithDate(
+                                            DatesHabitsCrossRef(
+                                                calDate,
+                                                habit.habit
+                                            )
+                                        )
+                                        viewModel.getDatesWithHabits(calDate)
+
+                                    } else {
+                                        viewModel.deleteHabitWithDate(
+                                            DatesHabitsCrossRef(
+                                                calDate,
+                                                habit.habit
+                                            )
+                                        )
+                                        viewModel.getDatesWithHabits(calDate)
+                                    }
+                                }
+                            ),
+                        backgroundColor = if (isDark) color else Color.White,
+                        elevation = elevation.value,
+                        shape = CircleShape,
+
+                        ) {
+
+                        Crossfade(targetState = checked) {
+
+                            if (checked) {
+                                elevation.value = 4.dp
+                                Text(
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    text = habit.habit,
+                                    style = MaterialTheme.typography.h6
+                                )
+                            } else {
+                                elevation.value = 1.dp
+                                Text(
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    text = habit.habit,
+                                    color = Color.LightGray,
+                                    style = MaterialTheme.typography.h6
+                                )
+                            }
+                        }
+                    }
                 }
-            }
+
         } else {
+
+
             Card(
                 modifier = Modifier
                     .padding(4.dp)
-                    .weight(if (historyToggle.value) 3f else 4f)
-                    .toggleable(
-                        value = false,
-                        onValueChange = {
-                            if (it) {
-                                viewModel.insertHabitWithDate(
-                                    DatesHabitsCrossRef(
-                                        calDate,
-                                        habit.habit
-                                    )
-                                )
-                                viewModel.getDatesWithHabits(calDate)
-
-                            } else {
-                                viewModel.deleteHabitWithDate(
-                                    com.example.hilt.db.DatesHabitsCrossRef(
-                                        calDate,
-                                        habit.habit
-                                    )
-                                )
-                                viewModel.getDatesWithHabits(calDate)
-                            }
-                        }
-                    ),
+                    .weight(if(historyToggle.value) 3.5f else 4f),
                 elevation = elevation.value,
                 shape = CircleShape
             ) {
@@ -516,107 +450,71 @@ fun HabitCard(
             }
         }
 
-
-
-
-        if (historyToggle.value) {
-            Card(
-                modifier = Modifier
-                    .padding(4.dp)
-                    .weight(2f),
-                elevation = 4.dp,
-                shape = CircleShape
-            ) {
-                Text(
+        Crossfade(targetState = historyToggle.value) {
+            if (historyToggle.value) {
+                Card(
                     modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    text = if (selectedOption == "Last 7 days") "5 / 7" else "20 / 30",
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.h6
-                )
-            }
-        } else {
-//            if (dateHabit.isNotEmpty()) {
-//                Card(
-//                    modifier = Modifier
-//                        .padding(4.dp)
-//                        .weight(1f),
-//                    elevation = 4.dp,
-//                    shape = CircleShape
-//                ) {
-//
-//                    val dateWithHabit = dateHabit[0]
-//                    val dateHasHabit = dateWithHabit.habits.contains(Habit(habit.habit))
-//
-//                    var checked = false
-//                    if (dateHasHabit) {
-//                        checked = true
-//                    }
-//                    val color by animateColorAsState(
-//                        if (checked) colorResource(id = R.color.checkGreen) else
-//                            MaterialTheme.colors.surface.copy(0.1f)
-//                    )
-//                    IconToggleButton(
-//                        modifier = Modifier
-//                            .background(color),
-//                        checked = checked,
-//                        onCheckedChange = {
-//                            if (it) {
-//                                viewModel.insertHabitWithDate(
-//                                    DatesHabitsCrossRef(
-//                                        calDate,
-//                                        habit.habit
-//                                    )
-//                                )
-//                                viewModel.getDatesWithHabits(calDate)
-//
-//                            } else {
-//                                viewModel.deleteHabitWithDate(
-//                                    DatesHabitsCrossRef(
-//                                        calDate,
-//                                        habit.habit
-//                                    )
-//                                )
-//                                viewModel.getDatesWithHabits(calDate)
-//                            }
-//                        }
-//                    ) {
-//                        Crossfade(targetState = checked) {
-//
-//                            if (checked)
-//                                Icon(
-//                                    Icons.Filled.Check,
-//                                    contentDescription = null,
-//                                    tint = Color.White,
-//                                )
-//                            else
-//                                Icon(
-//                                    Icons.Filled.Clear,
-//                                    contentDescription = null,
-//                                    tint = Color.LightGray
-//                                )
-//                        }
-//                    }
-//                }
-//            }
-            Card(
-                modifier = Modifier
-                    .padding(4.dp)
-                    .weight(1f),
-                elevation = 4.dp,
-                shape = CircleShape
-            ) {
-
-                IconButton(
-                    onClick = { /*TODO*/ },
+                        .padding(4.dp)
+                        .weight(2f),
+                    elevation = 4.dp,
+                    shape = CircleShape
                 ) {
-                    Icon(Icons.Filled.DateRange, contentDescription = null)
+                    val habitsWithDatesListStats = viewModel.habitsWithDatesListStats.value
+                    Log.d("Log9", viewModel.habitsWithDatesListStats.value.toString())
+
+                    var stats = HabitStats(habit.habit, 0)
+                    for (habitStat in habitsWithDatesListStats) {
+                        if (habitStat.habit == habit.habit) {
+                            stats = HabitStats(habitStat.habit, habitStat.stat)
+                        }
+                    }
+
+                    Text(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        text = if (selectedOption == "Last 7 days") {
+                            if (habitsWithDatesListStats.isNotEmpty() &&
+                                stats.habit == habit.habit
+                            ) {
+                                "${stats.stat} / 7"
+                            } else {
+                                "-- / 7"
+                            }
+                        } else {
+                            if (habitsWithDatesListStats.isNotEmpty() &&
+                                stats.habit == habit.habit
+                            ) {
+                                "${stats.stat} / 30"
+                            } else {
+                                "-- / 30"
+                            }
+                        },
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.h6
+                    )
+                }
+            } else {
+
+
+
+
+
+                Card(
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .weight(1f),
+                    elevation = 4.dp,
+                    shape = CircleShape
+                ) {
+
+                    IconButton(
+                        onClick = { /*TODO*/ },
+                    ) {
+                        Icon(Icons.Filled.DateRange, contentDescription = null)
+                    }
                 }
             }
-
         }
-
-
     }
 }
 
@@ -780,10 +678,11 @@ fun DateCard(
             }
             Column(modifier = Modifier.padding(4.dp)) {
 
-                Text(modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-                    .padding(vertical = 4.dp),
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
+                        .padding(vertical = 4.dp),
                     text = date.week,
                     fontSize = 30.sp,
                     textAlign = TextAlign.Center
@@ -795,7 +694,7 @@ fun DateCard(
             }
         }
         Divider(
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier.padding(6.dp),
             thickness = 1.dp,
             color = Color.Black
         )
