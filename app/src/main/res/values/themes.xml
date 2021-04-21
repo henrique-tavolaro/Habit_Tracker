@@ -19,6 +19,15 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+<!--    <style name="Theme.Custom" parent="Theme.Hilt">-->
+<!--        <item name="android:calendarViewStyle">@style/Widget.CalendarView.Custom</item>-->
+<!--    </style>-->
+
+    <style name="CalenderViewDateCustomText" parent="android:TextAppearance.DeviceDefault.Small">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:weekDayTextAppearance">@color/white</item>
+    </style>
+
     <style name="Theme.Hilt.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="Theme.Hilt.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />

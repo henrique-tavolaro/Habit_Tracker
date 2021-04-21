@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CalendarView
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
@@ -32,6 +33,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavController
+import androidx.navigation.Navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import com.example.hilt.db.*
 import com.example.hilt.ui.theme.HiltTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -65,6 +69,8 @@ class CalendarListFragment : Fragment() {
                     currDate.get(Calendar.DATE)
                     val newCurrDate = sdf.format(currDate.time).toString()
                     val selectedCategory = viewModel.selectedCategory.value
+//                    val currMilli = currDate.getT
+//                    Log.d("millis", currMilli.toString())
 
                     val previous = Calendar.getInstance()
                     val amount = -1
@@ -233,7 +239,8 @@ class CalendarListFragment : Fragment() {
                                         isDeleteHabitDialogOpen,
                                         selectedOption,
                                         historyToggle,
-                                        isDark
+                                        isDark,
+                                        findNavController()
                                     )
                                 }
                             }
@@ -289,6 +296,7 @@ fun SimpleRadioButtonComponent(
 
                         }
                     )
+
                     Text(
                         text = text,
                         modifier = Modifier.padding(start = 16.dp, top = 4.dp)
@@ -309,7 +317,8 @@ fun HabitCard(
     isDialogOpen: MutableState<Boolean>,
     selectedOption: String,
     historyToggle: MutableState<Boolean>,
-    isDark: Boolean
+    isDark: Boolean,
+    navController: NavController
 ) {
 
 
@@ -351,85 +360,85 @@ fun HabitCard(
                 else MaterialTheme.colors.surface
             )
 
-                if (historyToggle.value) {
+            if (historyToggle.value) {
 
-                    Card(
+                Card(
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .weight(3.5f),
+                    backgroundColor = if (isDark) color else Color.White,
+                    elevation = 4.dp,
+                    shape = CircleShape,
+
+                    ) {
+
+
+                    Text(
                         modifier = Modifier
-                            .padding(4.dp)
-                            .weight(3.5f),
-                        backgroundColor = if (isDark) color else Color.White,
-                        elevation = 4.dp,
-                        shape = CircleShape,
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        text = habit.habit,
+                        style = MaterialTheme.typography.h6
+                    )
+                }
 
-                        ) {
+            } else {
 
-
-                        Text(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            text = habit.habit,
-                            style = MaterialTheme.typography.h6
-                        )
-                    }
-
-                } else {
-
-                    Card(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .weight(4f)
-                            .toggleable(
-                                value = checked,
-                                onValueChange = {
-                                    if (it) {
-                                        viewModel.insertHabitWithDate(
-                                            DatesHabitsCrossRef(
-                                                calDate,
-                                                habit.habit
-                                            )
+                Card(
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .weight(4f)
+                        .toggleable(
+                            value = checked,
+                            onValueChange = {
+                                if (it) {
+                                    viewModel.insertHabitWithDate(
+                                        DatesHabitsCrossRef(
+                                            calDate,
+                                            habit.habit
                                         )
-                                        viewModel.getDatesWithHabits(calDate)
+                                    )
+                                    viewModel.getDatesWithHabits(calDate)
 
-                                    } else {
-                                        viewModel.deleteHabitWithDate(
-                                            DatesHabitsCrossRef(
-                                                calDate,
-                                                habit.habit
-                                            )
+                                } else {
+                                    viewModel.deleteHabitWithDate(
+                                        DatesHabitsCrossRef(
+                                            calDate,
+                                            habit.habit
                                         )
-                                        viewModel.getDatesWithHabits(calDate)
-                                    }
+                                    )
+                                    viewModel.getDatesWithHabits(calDate)
                                 }
-                            ),
-                        backgroundColor = if (isDark) color else Color.White,
-                        elevation = elevation.value,
-                        shape = CircleShape,
-
-                        ) {
-
-                        Crossfade(targetState = checked) {
-
-                            if (checked) {
-                                elevation.value = 4.dp
-                                Text(
-                                    modifier = Modifier
-                                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                                    text = habit.habit,
-                                    style = MaterialTheme.typography.h6
-                                )
-                            } else {
-                                elevation.value = 1.dp
-                                Text(
-                                    modifier = Modifier
-                                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                                    text = habit.habit,
-                                    color = Color.LightGray,
-                                    style = MaterialTheme.typography.h6
-                                )
                             }
+                        ),
+                    backgroundColor = if (isDark) color else Color.White,
+                    elevation = elevation.value,
+                    shape = CircleShape,
+
+                    ) {
+
+                    Crossfade(targetState = checked) {
+
+                        if (checked) {
+                            elevation.value = 4.dp
+                            Text(
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                text = habit.habit,
+                                style = MaterialTheme.typography.h6
+                            )
+                        } else {
+                            elevation.value = 1.dp
+                            Text(
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                text = habit.habit,
+                                color = Color.LightGray,
+                                style = MaterialTheme.typography.h6
+                            )
                         }
                     }
                 }
+            }
 
         } else {
 
@@ -437,7 +446,7 @@ fun HabitCard(
             Card(
                 modifier = Modifier
                     .padding(4.dp)
-                    .weight(if(historyToggle.value) 3.5f else 4f),
+                    .weight(if (historyToggle.value) 3.5f else 4f),
                 elevation = elevation.value,
                 shape = CircleShape
             ) {
@@ -496,9 +505,6 @@ fun HabitCard(
             } else {
 
 
-
-
-
                 Card(
                     modifier = Modifier
                         .padding(4.dp)
@@ -508,7 +514,11 @@ fun HabitCard(
                 ) {
 
                     IconButton(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            val action = CalendarListFragmentDirections
+                                .actionCalendarListFragmentToCalendarFragment(habit.habit, isDark)
+                            navController.navigate(action)
+                        },
                     ) {
                         Icon(Icons.Filled.DateRange, contentDescription = null)
                     }

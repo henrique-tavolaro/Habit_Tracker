@@ -9,5 +9,24 @@
         android:id="@+id/calendarListFragment"
         android:name="com.example.hilt.CalendarListFragment"
         android:label="fragment_calendar_list"
-        tools:layout="@layout/fragment_calendar_list" />
+        tools:layout="@layout/fragment_calendar_list" >
+        <action
+            android:id="@+id/action_calendarListFragment_to_calendarFragment"
+            app:destination="@id/calendarFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/calendarFragment"
+        android:name="com.example.hilt.CalendarFragment"
+        android:label="fragment_calendar"
+        tools:layout="@layout/fragment_calendar" >
+        <action
+            android:id="@+id/action_calendarFragment_to_calendarListFragment"
+            app:destination="@id/calendarListFragment" />
+        <argument
+            android:name="habit"
+            app:argType="string" />
+        <argument
+            android:name="isDark"
+            app:argType="boolean" />
+    </fragment>
 </navigation>

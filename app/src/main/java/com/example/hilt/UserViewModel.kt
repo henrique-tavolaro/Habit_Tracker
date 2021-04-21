@@ -99,7 +99,15 @@ class UserViewModel @Inject constructor(
         }
     }
 
-//    val habitsWithDates: MutableState<List<HabitsWithDates>> = mutableStateOf(listOf())
+    val habitsWithDates: MutableState<List<HabitsWithDates>> = mutableStateOf(listOf())
+
+    fun habitsWithDates(habit: String){
+        viewModelScope.launch {
+            habitsWithDates.value = repository.getHabitsWithDates(habit)
+        }
+    }
+
+
 
     fun getHabitsWithDates(
         habit: String,

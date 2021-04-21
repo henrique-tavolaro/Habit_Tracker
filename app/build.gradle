@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.hilt"
-        minSdkVersion 21
+        minSdkVersion 26
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -41,7 +41,10 @@ android {
         kotlinCompilerExtensionVersion compose_version
         kotlinCompilerVersion '1.4.30'
     }
+
 }
+
+
 
 dependencies {
 
@@ -84,4 +87,8 @@ dependencies {
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
 
     implementation "androidx.compose.material:material-icons-extended:$compose_version"
+
+    implementation 'com.applandeo:material-calendar-view:1.7.0'
+
+    implementation 'com.github.sigmadeltasoftware:CalPose:1.0.4'
 }
