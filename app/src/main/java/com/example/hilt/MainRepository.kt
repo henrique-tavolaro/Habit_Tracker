@@ -1,9 +1,6 @@
 package com.example.hilt
 
-import com.example.hilt.db.CalDate
-import com.example.hilt.db.DatesHabitsCrossRef
-import com.example.hilt.db.Habit
-import com.example.hilt.db.UserDao
+import com.example.hilt.db.*
 import javax.inject.Inject
 
 class MainRepository @Inject constructor(
@@ -29,4 +26,10 @@ class MainRepository @Inject constructor(
 
     suspend fun deleteHabitWithDate(crossRef: DatesHabitsCrossRef) =
         userDao.deleteHabitWithDate(crossRef)
+
+    suspend fun toggleDarkTheme(isDark: DarkTheme) = userDao.updateDarkTheme(isDark)
+
+    suspend fun getDarkTheme() = userDao.getDarkMode()
+
+    suspend fun getDarkThemeList() = userDao.getDarkModeList()
 }

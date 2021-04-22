@@ -35,5 +35,16 @@ interface UserDao {
     @Transaction
     @Query("SELECT * FROM habits WHERE habit = :habit")
     suspend fun getHabitsWithDates(habit: String): List<HabitsWithDates>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateDarkTheme(isDark: DarkTheme)
+
+    @Transaction
+    @Query("SELECT * FROM dark" )
+    suspend fun getDarkModeList(): List<DarkTheme>
+
+    @Transaction
+    @Query("SELECT isDark FROM dark WHERE id = 1" )
+    suspend fun getDarkMode(): Boolean
 }
 

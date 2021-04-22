@@ -20,10 +20,20 @@ class UserViewModel @Inject constructor(
 
     val selectedCategory: MutableState<String?> = mutableStateOf(null)
 
-    val isDark = mutableStateOf(false)
+    val isDark: MutableState<Boolean> = mutableStateOf(false)
 
     fun toggleLightTheme() {
         isDark.value = !isDark.value
+        viewModelScope.launch {
+            repository.toggleDarkTheme(DarkTheme(1, isDark.value))
+        }
+    }
+
+
+    fun getDarkTheme() {
+        viewModelScope.launch {
+            isDark.value = repository.getDarkTheme()
+        }
     }
 
     fun onSelectedCategoryChanged(date: String) {
@@ -38,6 +48,15 @@ class UserViewModel @Inject constructor(
 
     val habitTextInput = mutableStateOf("")
 
+    val darkEntity: MutableState<List<DarkTheme>> = mutableStateOf(listOf())
+
+    fun getDarkModeList() {
+        viewModelScope.launch {
+            darkEntity.value = repository.getDarkThemeList()
+        }
+    }
+
+
     fun onHabitTextInputChange(text: String) {
         habitTextInput.value = text
     }
@@ -45,14 +64,13 @@ class UserViewModel @Inject constructor(
     init {
         getAllHabits()
         getAllDates()
-    }
+            }
 
     val datesWithHabits: MutableState<List<DatesWithHabits>> = mutableStateOf(listOf())
 
     fun getDatesWithHabits(date: String) {
         viewModelScope.launch {
             datesWithHabits.value = repository.getDatesWithHabits(date)
-
         }
     }
 
@@ -101,12 +119,11 @@ class UserViewModel @Inject constructor(
 
     val habitsWithDates: MutableState<List<HabitsWithDates>> = mutableStateOf(listOf())
 
-    fun habitsWithDates(habit: String){
+    fun habitsWithDates(habit: String) {
         viewModelScope.launch {
             habitsWithDates.value = repository.getHabitsWithDates(habit)
         }
     }
-
 
 
     fun getHabitsWithDates(
@@ -130,8 +147,8 @@ class UserViewModel @Inject constructor(
                 listCalDate.add(CalDate(sdf.format(date.time), week.format(date.time)))
                 date.add(Calendar.DATE, plus)
                 Log.d("Log3", "$habit , ${sdf.format(date.time)}")
-                }
-            if(listCalDate.size == 7){
+            }
+            if (listCalDate.size == 7) {
                 date.add(Calendar.DATE, -7)
             } else {
                 date.add(Calendar.DATE, -30)
@@ -144,17 +161,19 @@ class UserViewModel @Inject constructor(
                 ) {
                     listSeven.add(calDate)
                 }
-              }
+            }
             Log.d("Log7", "$habit , $listSeven , ${listSeven.size}")
             habitsWithDatesListStats.value.add(
-                HabitStats(habit, listSeven.size))
+                HabitStats(habit, listSeven.size)
+            )
             Log.d("Log8", habitsWithDatesListStats.value.toString())
 
 
         }
     }
 
-    val habitsWithDatesListStats: MutableState<MutableList<HabitStats>> = mutableStateOf(mutableListOf())
+    val habitsWithDatesListStats: MutableState<MutableList<HabitStats>> =
+        mutableStateOf(mutableListOf())
 
     fun habitStats(
         text: String,
@@ -181,11 +200,10 @@ class UserViewModel @Inject constructor(
             getAllHabits()
 
             if (habitsList.isNotEmpty()) {
-                if(habitsWithDatesListStats.value.isEmpty()) {
+                if (habitsWithDatesListStats.value.isEmpty()) {
                     for (habit in habitsList) {
                         getHabitsWithDates(
-                            habit.habit
-                            , sdf, week, period, currDate
+                            habit.habit, sdf, week, period, currDate
                         )
                         Log.d("Log12d", habitsWithDatesListStats.value.toString())
                     }
@@ -193,8 +211,7 @@ class UserViewModel @Inject constructor(
                     habitsWithDatesListStats.value = mutableListOf()
                     for (habit in habitsList) {
                         getHabitsWithDates(
-                            habit.habit
-                            , sdf, week, period, currDate
+                            habit.habit, sdf, week, period, currDate
                         )
                         Log.d("Log12a", habitsWithDatesListStats.value.toString())
                     }

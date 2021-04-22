@@ -7,7 +7,8 @@ import androidx.room.RoomDatabase
     entities = [
         CalDate::class,
         Habit::class,
-        DatesHabitsCrossRef::class
+        DatesHabitsCrossRef::class,
+        DarkTheme::class
     ], version = 1
 )
 abstract class UserDatabase : RoomDatabase() {

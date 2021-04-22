@@ -54,12 +54,24 @@ class CalendarListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         return ComposeView(requireContext()).apply {
+
+
             setContent {
                 val isDark = viewModel.isDark.value
 
                 HiltTheme(
                     darkTheme = isDark
                 ) {
+                    viewModel.getDarkModeList()
+                    val darkModeTest = viewModel.darkEntity.value
+                    Log.d("dark3", darkModeTest.toString())
+
+                    if(darkModeTest.isNotEmpty()){
+                        viewModel.getDarkTheme()
+                        Log.d("dark4", darkModeTest.toString())
+
+                    }
+
                     val datesWithHabits = viewModel.datesWithHabits.value
                     val dateList = viewModel.calDateList.value
                     val sdf = SimpleDateFormat("d MMM yy")
@@ -147,14 +159,21 @@ class CalendarListFragment : Fragment() {
                             )
                         },
                         floatingActionButton = {
-                            ExtendedFloatingActionButton(
-                                text = {
-                                    Text(text = "Add a habit")
-                                },
-                                backgroundColor = MaterialTheme.colors.primary,
-                                icon = { Icon(Icons.Default.AddCircle, null) },
-                                onClick = { isDialogOpen.value = true }
-                            )
+
+                            Crossfade(targetState = historyToggle) {
+                                if(!historyToggle.value){
+
+                                    ExtendedFloatingActionButton(
+                                        text = {
+                                            Text(text = "Add a habit")
+                                        },
+                                        backgroundColor = MaterialTheme.colors.primary,
+                                        icon = { Icon(Icons.Default.AddCircle, null) },
+                                        onClick = { isDialogOpen.value = true }
+                                    )
+                                }
+                            }
+
                         }
                     ) {
                         val listState = rememberLazyListState()
