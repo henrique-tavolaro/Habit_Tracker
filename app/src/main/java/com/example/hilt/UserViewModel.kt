@@ -1,8 +1,11 @@
 package com.example.hilt
 
+import android.graphics.Insets.add
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.graphics.Insets.add
+import androidx.core.view.OneShotPreDrawListener.add
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hilt.db.*
@@ -41,8 +44,14 @@ class UserViewModel @Inject constructor(
         getDatesWithHabits(date)
     }
 
-
     val calDateList: MutableState<List<CalDate>> = mutableStateOf(listOf())
+
+    var dateScrollPosition: Int = -1
+
+    fun onChangeScrollPosition(position: Int) {
+        dateScrollPosition = position
+    }
+
 
     val habitList: MutableState<List<Habit>> = mutableStateOf(listOf())
 
@@ -64,7 +73,7 @@ class UserViewModel @Inject constructor(
     init {
         getAllHabits()
         getAllDates()
-            }
+    }
 
     val datesWithHabits: MutableState<List<DatesWithHabits>> = mutableStateOf(listOf())
 
@@ -139,13 +148,20 @@ class UserViewModel @Inject constructor(
             val date = newDate
             val listSeven = mutableListOf<CalDate>()
             val plus = 1
+            val tomorrow = Calendar.getInstance()
+            tomorrow.add(Calendar.DATE, plus)
+            Log.d("currdate", currDate.time.toString())
+
+            Log.d("currdate", date.time.toString())
+            Log.d("currdate", tomorrow.time.toString())
             val listCalDate = mutableListOf<CalDate>()
 //            val caldate = CalDate(sdf.format(date.time), week.format(date.time))
 //            Log.d("Log2", "$habit , $caldate")
             while (sdf.format(date.time) != sdf.format(currDate.time)) {
-
-                listCalDate.add(CalDate(sdf.format(date.time), week.format(date.time)))
                 date.add(Calendar.DATE, plus)
+                listCalDate.add(CalDate(sdf.format(date.time), week.format(date.time)))
+
+                Log.d("listDate", "${listCalDate.toString()}, ${listCalDate.size}")
                 Log.d("Log3", "$habit , ${sdf.format(date.time)}")
             }
             if (listCalDate.size == 7) {
@@ -167,10 +183,14 @@ class UserViewModel @Inject constructor(
                 HabitStats(habit, listSeven.size)
             )
             Log.d("Log8", habitsWithDatesListStats.value.toString())
-
-
+//            historyToggle.value = !historyToggle.value
+            toggle.value = !toggle.value
         }
     }
+
+    val toggle = mutableStateOf(false)
+
+    val historyToggle : MutableState<Boolean> = mutableStateOf(false)
 
     val habitsWithDatesListStats: MutableState<MutableList<HabitStats>> =
         mutableStateOf(mutableListOf())
@@ -182,14 +202,8 @@ class UserViewModel @Inject constructor(
         currDate: Calendar
     ) {
         viewModelScope.launch {
-//            habitsWithDatesListStats.value = mutableListOf()
-
-            Log.d("Log11a", habitsWithDatesListStats.value.toString())
-
-
-            Log.d("Log11b", habitsWithDatesListStats.value.toString())
-
             val period = Calendar.getInstance()
+
 
             if (text == "Last 7 days") {
                 period.add(Calendar.DATE, -7)
@@ -205,7 +219,6 @@ class UserViewModel @Inject constructor(
                         getHabitsWithDates(
                             habit.habit, sdf, week, period, currDate
                         )
-                        Log.d("Log12d", habitsWithDatesListStats.value.toString())
                     }
                 } else {
                     habitsWithDatesListStats.value = mutableListOf()
@@ -213,10 +226,8 @@ class UserViewModel @Inject constructor(
                         getHabitsWithDates(
                             habit.habit, sdf, week, period, currDate
                         )
-                        Log.d("Log12a", habitsWithDatesListStats.value.toString())
                     }
                 }
-                Log.d("Log12b", habitsWithDatesListStats.value.toString())
             }
         }
     }

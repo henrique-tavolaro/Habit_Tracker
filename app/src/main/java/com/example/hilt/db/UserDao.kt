@@ -46,5 +46,7 @@ interface UserDao {
     @Transaction
     @Query("SELECT isDark FROM dark WHERE id = 1" )
     suspend fun getDarkMode(): Boolean
+
+
 }
 

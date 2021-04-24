@@ -2,7 +2,6 @@ package com.example.hilt
 
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -67,14 +66,10 @@ class CalendarFragment : Fragment() {
                     darkTheme =
                     if (args.isDark) !isDark else isDark
                 ) {
-                      Log.d("args", args.habit)
-//
+
                     val datesList: MutableList<CalposeDate> = mutableListOf()
-//
                     val calendar = Calendar.getInstance()
-
                     val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yy, MM")
-
                     val formatYearMonth = SimpleDateFormat("yy, MM")
                     val formatDay = SimpleDateFormat("d")
                     val sdf = SimpleDateFormat("dd MMM yy")
@@ -82,7 +77,6 @@ class CalendarFragment : Fragment() {
                     val habitsWithDates = viewModel.habitsWithDates.value
                     if (habitsWithDates.isNotEmpty()) {
                         for (habitDate in habitsWithDates[0].dates!!) {
-                            Log.d("habitdate", habitDate.date)
                             calendar.time = sdf.parse(habitDate.date!!)
                             val yearMonth = formatYearMonth.format(calendar.time)
 
@@ -101,20 +95,10 @@ class CalendarFragment : Fragment() {
 
 
                             val day = formatDay.format(calendar.time).toInt()
-                            Log.d("ze", day.toString())
-                            Log.d("ze", we.toString())
-                            Log.d("ze", year.toString())
                             val calpose = CalposeDate(day, we, year)
                             datesList.add(calpose)
-
-                            Log.d("ze", calpose.toString())
                         }
-                        Log.d("habitdate", datesList.toString())
-
                     }
-
-
-                    Log.d("habitdate2", datesList.toString())
 
                     Scaffold(
                         topBar = {
